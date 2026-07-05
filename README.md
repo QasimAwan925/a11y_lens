@@ -22,7 +22,7 @@ contrast and undersized tap targets.
 
 ```yaml
 dependencies:
-  a11y_lens: ^0.1.0
+  a11y_lens: ^0.1.2
 ```
 
 ```bash
