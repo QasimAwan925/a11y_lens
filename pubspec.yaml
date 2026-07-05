@@ -1,9 +1,8 @@
 name: a11y_lens
 description: A lightweight, dependency-free accessibility toolkit for Flutter. Catch color contrast and tap-target issues at debug time, before they ship.
 version: 0.1.2
-homepage: https://github.com/YOUR_USERNAME/a11y_lens
-repository: https://github.com/YOUR_USERNAME/a11y_lens
-issue_tracker: https://github.com/YOUR_USERNAME/a11y_lens/issues
+homepage: https://github.com/QasimAwan925/a11y_lens
+repository: https://github.com/QasimAwan925/a11y_lens
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
