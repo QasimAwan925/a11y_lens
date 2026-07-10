@@ -40,11 +40,11 @@ class A11yIssue {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is A11yIssue &&
-              runtimeType == other.runtimeType &&
-              id == other.id &&
-              type == other.type &&
-              message == other.message;
+      other is A11yIssue &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          type == other.type &&
+          message == other.message;
 
   @override
   int get hashCode => Object.hash(id, type, message);

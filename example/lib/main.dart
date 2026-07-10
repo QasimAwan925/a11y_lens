@@ -29,9 +29,9 @@ class DemoPage extends StatelessWidget {
         children: [
           const Text(
             'Tap the floating button (bottom right) to see the live '
-                'accessibility report. This screen intentionally includes a '
-                'couple of violations to demonstrate detection. Tap an issue '
-                'in the report to scroll to it and see it flash amber.',
+            'accessibility report. This screen intentionally includes a '
+            'couple of violations to demonstrate detection. Tap an issue '
+            'in the report to scroll to it and see it flash amber.',
           ),
           const SizedBox(height: 24),
           const Text('Contrast checks',
@@ -108,7 +108,7 @@ class DemoPage extends StatelessWidget {
           const SizedBox(height: 600),
           const Text(
             'If you scrolled here by tapping an issue in the report, '
-                'tap-to-locate is working correctly!',
+            'tap-to-locate is working correctly!',
             style: TextStyle(fontStyle: FontStyle.italic),
           ),
         ],

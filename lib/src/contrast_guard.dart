@@ -101,7 +101,7 @@ class _ContrastGuardState extends State<ContrastGuard> {
     if (!mounted) return;
     final ratio = ContrastChecker.ratio(widget.foreground, widget.background);
     final passes =
-    ContrastChecker.passesAA(ratio, isLargeText: widget.isLargeText);
+        ContrastChecker.passesAA(ratio, isLargeText: widget.isLargeText);
     final failed = !passes;
 
     if (failed) {
@@ -148,11 +148,11 @@ class _ContrastGuardState extends State<ContrastGuard> {
       key: _anchorKey,
       decoration: showOutline
           ? BoxDecoration(
-        border: Border.all(
-          color: _flashing ? Colors.amber : Colors.red,
-          width: _flashing ? 4 : 2,
-        ),
-      )
+              border: Border.all(
+                color: _flashing ? Colors.amber : Colors.red,
+                width: _flashing ? 4 : 2,
+              ),
+            )
           : null,
       child: widget.child,
     );

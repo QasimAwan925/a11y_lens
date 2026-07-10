@@ -122,11 +122,11 @@ class _TapTargetGuardState extends State<TapTargetGuard> {
       key: _anchorKey,
       decoration: showOutline
           ? BoxDecoration(
-        border: Border.all(
-          color: _flashing ? Colors.amber : Colors.orange,
-          width: _flashing ? 4 : 2,
-        ),
-      )
+              border: Border.all(
+                color: _flashing ? Colors.amber : Colors.orange,
+                width: _flashing ? 4 : 2,
+              ),
+            )
           : null,
       child: widget.child,
     );

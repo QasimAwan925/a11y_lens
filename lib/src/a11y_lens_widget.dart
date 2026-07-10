@@ -83,9 +83,8 @@ class _A11yLensState extends State<A11yLens> {
                       child: FloatingActionButton.small(
                         heroTag: 'a11y_lens_fab',
                         backgroundColor:
-                        issues.isNotEmpty ? Colors.red : Colors.green,
-                        onPressed: () =>
-                            setState(() => _expanded = !_expanded),
+                            issues.isNotEmpty ? Colors.red : Colors.green,
+                        onPressed: () => setState(() => _expanded = !_expanded),
                         child: Icon(
                           _expanded ? Icons.close : Icons.accessibility_new,
                         ),
@@ -138,41 +137,40 @@ class _ReportPanel extends StatelessWidget {
                 child: issues.isEmpty
                     ? const Text('No issues found. \u2705')
                     : ListView(
-                  shrinkWrap: true,
-                  children: issues
-                      .map(
-                        (issue) => InkWell(
-                      borderRadius: BorderRadius.circular(6),
-                      onTap: () => onLocate(issue),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 6,
-                          horizontal: 4,
-                        ),
-                        child: Row(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.my_location,
-                              size: 14,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                issue.message,
-                                style:
-                                const TextStyle(fontSize: 13),
+                        shrinkWrap: true,
+                        children: issues
+                            .map(
+                              (issue) => InkWell(
+                                borderRadius: BorderRadius.circular(6),
+                                onTap: () => onLocate(issue),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                    horizontal: 4,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(
+                                        Icons.my_location,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          issue.message,
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            )
+                            .toList(),
                       ),
-                    ),
-                  )
-                      .toList(),
-                ),
               ),
             ],
           ),
