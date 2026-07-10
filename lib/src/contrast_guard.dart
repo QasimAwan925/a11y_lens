@@ -9,13 +9,15 @@ import 'contrast_checker.dart';
 /// [background] against WCAG AA.
 ///
 /// In debug mode, a failing pair is outlined in red and reported to
-/// [A11yRegistry.instance]. In release/profile mode this widget is a
-/// zero-cost passthrough to [child].
+/// [A11yRegistry.instance]. Tapping this issue in [A11yLens]'s report
+/// scrolls to and briefly flashes this exact widget. In release/profile
+/// mode this widget is a zero-cost passthrough to [child].
 ///
 /// Example:
 /// ```dart
 /// ContrastGuard(
 ///   id: 'hero_title',
+///   label: 'Welcome banner title',
 ///   foreground: Colors.grey,
 ///   background: Colors.white,
 ///   child: Text('Welcome', style: TextStyle(color: Colors.grey)),
@@ -25,6 +27,10 @@ class ContrastGuard extends StatefulWidget {
   /// Stable id used to track this check across rebuilds. Must be unique
   /// within your app.
   final String id;
+
+  /// Optional human-readable description shown in the report instead of
+  /// the raw [id] (e.g. "Welcome banner title" instead of "hero_title").
+  final String? label;
 
   /// The text/foreground color being checked.
   final Color foreground;
@@ -47,6 +53,7 @@ class ContrastGuard extends StatefulWidget {
     required this.foreground,
     required this.background,
     required this.child,
+    this.label,
     this.isLargeText = false,
   });
 
@@ -55,7 +62,9 @@ class ContrastGuard extends StatefulWidget {
 }
 
 class _ContrastGuardState extends State<ContrastGuard> {
+  final GlobalKey _anchorKey = GlobalKey();
   bool _failed = false;
+  bool _flashing = false;
 
   @override
   void initState() {
@@ -80,11 +89,19 @@ class _ContrastGuardState extends State<ContrastGuard> {
     }
   }
 
+  String _describe(double ratio) {
+    final threshold = widget.isLargeText ? '3.0' : '4.5';
+    final where = widget.label != null
+        ? '${widget.label} (id: ${widget.id})'
+        : 'id: ${widget.id}';
+    return 'Low contrast (${ratio.toStringAsFixed(2)}:1, needs $threshold:1) — $where';
+  }
+
   void _check() {
     if (!mounted) return;
     final ratio = ContrastChecker.ratio(widget.foreground, widget.background);
     final passes =
-        ContrastChecker.passesAA(ratio, isLargeText: widget.isLargeText);
+    ContrastChecker.passesAA(ratio, isLargeText: widget.isLargeText);
     final failed = !passes;
 
     if (failed) {
@@ -92,8 +109,9 @@ class _ContrastGuardState extends State<ContrastGuard> {
         A11yIssue(
           id: widget.id,
           type: A11yIssueType.contrast,
-          message: 'Low contrast (${ratio.toStringAsFixed(2)}:1, needs '
-              '${widget.isLargeText ? '3.0' : '4.5'}:1) — id: ${widget.id}',
+          message: _describe(ratio),
+          anchorKey: _anchorKey,
+          onLocate: _flash,
         ),
       );
     } else {
@@ -105,6 +123,17 @@ class _ContrastGuardState extends State<ContrastGuard> {
     }
   }
 
+  /// Briefly highlights this widget in amber. Called when the user taps
+  /// this issue in the [A11yLens] report panel, after it's scrolled into
+  /// view.
+  void _flash() {
+    if (!mounted) return;
+    setState(() => _flashing = true);
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _flashing = false);
+    });
+  }
+
   @override
   void dispose() {
     if (kDebugMode) A11yRegistry.instance.clear(widget.id);
@@ -113,10 +142,18 @@ class _ContrastGuardState extends State<ContrastGuard> {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode || !_failed) return widget.child;
+    if (!kDebugMode) return widget.child;
+    final showOutline = _failed || _flashing;
     return Container(
-      decoration:
-          BoxDecoration(border: Border.all(color: Colors.red, width: 2)),
+      key: _anchorKey,
+      decoration: showOutline
+          ? BoxDecoration(
+        border: Border.all(
+          color: _flashing ? Colors.amber : Colors.red,
+          width: _flashing ? 4 : 2,
+        ),
+      )
+          : null,
       child: widget.child,
     );
   }

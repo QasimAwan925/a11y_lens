@@ -1,3 +1,14 @@
+## 0.2.0
+
+- New: tap an issue in the A11yLens report panel to scroll straight to
+  the offending widget and see it flash amber — no more hunting through
+  the screen to find which element a report line refers to.
+- New: ContrastGuard and TapTargetGuard both take an optional
+  label parameter for a human-readable description in the report
+  (e.g. label: `Welcome banner title`) shown alongside the id.
+- A11yIssue gained anchorKey and onLocate fields powering the
+  above; both are populated automatically by the guard widgets.
+
 ## 0.1.3
 
 - Fix: `README FILE`.

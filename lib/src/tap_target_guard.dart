@@ -10,13 +10,16 @@ import 'tap_target_checker.dart';
 /// ([TapTargetChecker.minimumSize]).
 ///
 /// In debug mode, an undersized target is outlined in orange and
-/// reported to [A11yRegistry.instance]. In release/profile mode this
-/// widget is a zero-cost passthrough to [child].
+/// reported to [A11yRegistry.instance]. Tapping this issue in
+/// [A11yLens]'s report scrolls to and briefly flashes this exact widget.
+/// In release/profile mode this widget is a zero-cost passthrough to
+/// [child].
 ///
 /// Example:
 /// ```dart
 /// TapTargetGuard(
 ///   id: 'close_button',
+///   label: 'Dialog close icon',
 ///   child: IconButton(icon: Icon(Icons.close), onPressed: onClose),
 /// )
 /// ```
@@ -25,18 +28,28 @@ class TapTargetGuard extends StatefulWidget {
   /// within your app.
   final String id;
 
+  /// Optional human-readable description shown in the report instead of
+  /// the raw [id] (e.g. "Dialog close icon" instead of "close_button").
+  final String? label;
+
   /// The tappable widget being checked.
   final Widget child;
 
-  const TapTargetGuard({super.key, required this.id, required this.child});
+  const TapTargetGuard({
+    super.key,
+    required this.id,
+    required this.child,
+    this.label,
+  });
 
   @override
   State<TapTargetGuard> createState() => _TapTargetGuardState();
 }
 
 class _TapTargetGuardState extends State<TapTargetGuard> {
-  final GlobalKey _key = GlobalKey();
+  final GlobalKey _anchorKey = GlobalKey();
   bool _failed = false;
+  bool _flashing = false;
 
   @override
   void initState() {
@@ -46,9 +59,19 @@ class _TapTargetGuardState extends State<TapTargetGuard> {
     }
   }
 
+  String _describe(Size size) {
+    final where = widget.label != null
+        ? '${widget.label} (id: ${widget.id})'
+        : 'id: ${widget.id}';
+    final min = TapTargetChecker.minimumSize.toStringAsFixed(0);
+    return 'Tap target too small '
+        '(${size.width.toStringAsFixed(0)}x${size.height.toStringAsFixed(0)}, '
+        'needs ${min}x$min) — $where';
+  }
+
   void _check() {
     if (!mounted) return;
-    final renderObject = _key.currentContext?.findRenderObject();
+    final renderObject = _anchorKey.currentContext?.findRenderObject();
     if (renderObject is! RenderBox || !renderObject.hasSize) return;
 
     final passes = TapTargetChecker.passes(renderObject.size);
@@ -59,11 +82,9 @@ class _TapTargetGuardState extends State<TapTargetGuard> {
         A11yIssue(
           id: widget.id,
           type: A11yIssueType.tapTarget,
-          message: 'Tap target too small '
-              '(${renderObject.size.width.toStringAsFixed(0)}x'
-              '${renderObject.size.height.toStringAsFixed(0)}, needs '
-              '${TapTargetChecker.minimumSize.toStringAsFixed(0)}x'
-              '${TapTargetChecker.minimumSize.toStringAsFixed(0)}) — id: ${widget.id}',
+          message: _describe(renderObject.size),
+          anchorKey: _anchorKey,
+          onLocate: _flash,
         ),
       );
     } else {
@@ -73,6 +94,17 @@ class _TapTargetGuardState extends State<TapTargetGuard> {
     if (mounted && failed != _failed) {
       setState(() => _failed = failed);
     }
+  }
+
+  /// Briefly highlights this widget in amber. Called when the user taps
+  /// this issue in the [A11yLens] report panel, after it's scrolled into
+  /// view.
+  void _flash() {
+    if (!mounted) return;
+    setState(() => _flashing = true);
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _flashing = false);
+    });
   }
 
   @override
@@ -85,10 +117,16 @@ class _TapTargetGuardState extends State<TapTargetGuard> {
   Widget build(BuildContext context) {
     if (!kDebugMode) return widget.child;
     WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    final showOutline = _failed || _flashing;
     return Container(
-      key: _key,
-      decoration: _failed
-          ? BoxDecoration(border: Border.all(color: Colors.orange, width: 2))
+      key: _anchorKey,
+      decoration: showOutline
+          ? BoxDecoration(
+        border: Border.all(
+          color: _flashing ? Colors.amber : Colors.orange,
+          width: _flashing ? 4 : 2,
+        ),
+      )
           : null,
       child: widget.child,
     );

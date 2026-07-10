@@ -9,6 +9,7 @@ accessibility audit.
 - ✅ Zero runtime cost in release/profile builds
 - ✅ Drop-in guard widgets — wrap what you already have
 - ✅ Live floating report overlay while you develop
+- ✅ Tap an issue to jump straight to it — no hunting through the screen
 
 ## Why
 
@@ -22,7 +23,7 @@ contrast and undersized tap targets.
 
 ```yaml
 dependencies:
-  a11y_lens: ^0.1.3
+  a11y_lens: ^0.2.0
 ```
 
 ```bash
@@ -52,7 +53,8 @@ count and detail list of any issues currently on screen.
 
 ```dart
 ContrastGuard(
-  id: 'hero_title',              // unique, stable id
+  id: 'hero_title',                    // unique, stable id
+  label: 'Welcome banner title',       // optional, shown in the report
   foreground: Colors.grey,
   background: Colors.white,
   child: Text(
@@ -71,6 +73,7 @@ in the live report.
 ```dart
 TapTargetGuard(
   id: 'close_button',
+  label: 'Dialog close icon',          // optional, shown in the report
   child: IconButton(
     icon: const Icon(Icons.close),
     onPressed: onClose,
@@ -82,7 +85,17 @@ If the rendered size is smaller than 48x48 logical pixels in either
 dimension, the widget gets an orange debug outline and the issue
 appears in the live report.
 
-### 4. Use the checkers directly (no widgets)
+### 4. Find an issue instantly with tap-to-locate
+
+Every issue in the live report is tappable. Tapping one:
+
+1. Scrolls the page so the offending widget comes into view
+2. Flashes it amber for about a second
+
+No more scanning a long screen for a stray red or orange outline — the
+report panel takes you straight to it.
+
+### 5. Use the checkers directly (no widgets)
 
 Both checks are also available as plain static utilities, useful for
 unit tests or design-system validation scripts:
@@ -96,7 +109,7 @@ final fits = TapTargetChecker.passes(const Size(40, 40)); // false
 
 ## What this does *not* do (yet)
 
-This is a focused v0.1 release, intentionally scoped small:
+This is intentionally scoped small:
 
 - No automatic whole-tree scanning — you opt in per widget with the
   guards. This keeps false positives near zero and requires no fragile
@@ -104,7 +117,7 @@ This is a focused v0.1 release, intentionally scoped small:
 - No screen reader / semantics label auditing yet.
 - No CI/lint-time static analysis yet.
 
-Both are natural directions for future versions — contributions and
+These are natural directions for future versions — contributions and
 issues welcome.
 
 ## Example

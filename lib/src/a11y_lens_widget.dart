@@ -8,6 +8,10 @@ import 'a11y_registry.dart';
 /// floating debug button reporting live accessibility issues found by
 /// [ContrastGuard] and [TapTargetGuard] widgets elsewhere in the tree.
 ///
+/// Tapping an issue in the report scrolls the offending widget into
+/// view and briefly flashes it in amber, so you can find exactly which
+/// element is failing without hunting through the screen manually.
+///
 /// In release/profile mode this simply returns [child] unchanged.
 ///
 /// This widget is intentionally self-contained: it does not use
@@ -34,6 +38,23 @@ class A11yLens extends StatefulWidget {
 class _A11yLensState extends State<A11yLens> {
   bool _expanded = false;
 
+  void _locate(A11yIssue issue) {
+    // Collapse the panel first so it doesn't obscure the widget once
+    // it's scrolled into view.
+    setState(() => _expanded = false);
+    final ctx = issue.anchorKey?.currentContext;
+    if (ctx == null) {
+      issue.onLocate?.call();
+      return;
+    }
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+      alignment: 0.3,
+    ).then((_) => issue.onLocate?.call());
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!kDebugMode) return widget.child;
@@ -53,7 +74,7 @@ class _A11yLensState extends State<A11yLens> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     if (_expanded) ...[
-                      _ReportPanel(issues: issues),
+                      _ReportPanel(issues: issues, onLocate: _locate),
                       const SizedBox(height: 8),
                     ],
                     Badge(
@@ -62,8 +83,9 @@ class _A11yLensState extends State<A11yLens> {
                       child: FloatingActionButton.small(
                         heroTag: 'a11y_lens_fab',
                         backgroundColor:
-                            issues.isNotEmpty ? Colors.red : Colors.green,
-                        onPressed: () => setState(() => _expanded = !_expanded),
+                        issues.isNotEmpty ? Colors.red : Colors.green,
+                        onPressed: () =>
+                            setState(() => _expanded = !_expanded),
                         child: Icon(
                           _expanded ? Icons.close : Icons.accessibility_new,
                         ),
@@ -82,8 +104,9 @@ class _A11yLensState extends State<A11yLens> {
 
 class _ReportPanel extends StatelessWidget {
   final List<A11yIssue> issues;
+  final ValueChanged<A11yIssue> onLocate;
 
-  const _ReportPanel({required this.issues});
+  const _ReportPanel({required this.issues, required this.onLocate});
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +115,7 @@ class _ReportPanel extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       color: Theme.of(context).colorScheme.surface,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 280, maxHeight: 320),
+        constraints: const BoxConstraints(maxWidth: 300, maxHeight: 340),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -103,25 +126,53 @@ class _ReportPanel extends StatelessWidget {
                 'Accessibility Report',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              if (issues.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  'Tap an issue to jump to it',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 8),
               Flexible(
                 child: issues.isEmpty
                     ? const Text('No issues found. \u2705')
                     : ListView(
-                        shrinkWrap: true,
-                        children: issues
-                            .map(
-                              (issue) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                child: Text(
-                                  '\u2022 ${issue.message}',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
+                  shrinkWrap: true,
+                  children: issues
+                      .map(
+                        (issue) => InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => onLocate(issue),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 6,
+                          horizontal: 4,
+                        ),
+                        child: Row(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.my_location,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                issue.message,
+                                style:
+                                const TextStyle(fontSize: 13),
                               ),
-                            )
-                            .toList(),
+                            ),
+                          ],
+                        ),
                       ),
+                    ),
+                  )
+                      .toList(),
+                ),
               ),
             ],
           ),
